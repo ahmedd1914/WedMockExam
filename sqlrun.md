@@ -1,0 +1,45 @@
+CREATE TABLE Users (
+    UserID INT PRIMARY KEY IDENTITY(1,1),
+    Username NVARCHAR(50) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    DateOfBirth DATE NOT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    IsActive BIT NOT NULL DEFAULT 1
+);
+
+CREATE TABLE Workplaces 
+(
+WorkplaceID INT PRIMARY KEY IDENTITY(1,1),
+Floor INT NOT NULL,
+Zone NVARCHAR(50) NOT NULL,
+HasMonitor BIT NOT NULL DEFAULT(0),
+HasDocking BIT NOT NULL DEFAULT(0),
+HasWindow BIT NOT NULL DEFAULT(0),
+HasPrinter BIT NOT NULL DEFAULT(0)
+)
+
+
+CREATE TABLE PrefferredLocations 
+(
+UserID INT NOT NULL,
+WorkplaceID INT NOT NULL,
+PreferenceRank TINYINT NOT NULL,
+PRIMARY KEY(UserID, WorkplaceID),
+FOREIGN KEY (UserID) REFERENCES Users(UserID),
+FOREIGN KEY (WorkplaceID) REFERENCES Workplaces(WorkplaceID),
+CONSTRAINT UQ_Pref_UserWork UNIQUE (UserID, WorkplaceID)
+)
+
+CREATE TABLE Reservations 
+(
+ReservationID INT PRIMARY KEY IDENTITY(1,1),
+UserID INT NOT NULL,
+WorkplaceID INT NOT NULL,
+BookingDate DATE NOT NULL,
+FOREIGN KEY (UserID) REFERENCES Users(UserID),
+FOREIGN KEY (WorkplaceID) REFERENCES Workplaces(WorkplaceID),
+CONSTRAINT UQ_Res_UserDate UNIQUE (UserID, BookingDate)
+)

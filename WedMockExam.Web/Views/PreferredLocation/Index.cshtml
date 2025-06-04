@@ -1,0 +1,200 @@
+@model WedMockExam.Web.Models.ViewModels.PreferredLocation.PreferredLocationViewModel
+@{
+    ViewData["Title"] = "Preferred Locations";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">
+            <i class="bi bi-star-fill me-2 text-warning"></i>Preferred Locations
+        </h1>
+        <a asp-controller="Reservation" asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-calendar-plus me-2"></i>Create Reservation
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Add New Preferred Location -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Add Preferred Location
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Add" method="post">
+                        <input type="hidden" asp-for="UserId" />
+                        
+                        <div class="form-floating mb-3">
+                            <select asp-for="WorkplaceId" class="form-select" required>
+                                <option value="">Select a workplace...</option>
+                                @foreach (var workplace in Model.AvailableWorkplaces)
+                                {
+                                    <option value="@workplace.WorkplaceId">
+                                        Floor @workplace.Floor, Zone @workplace.Zone
+                                    </option>
+                                }
+                            </select>
+                            <label asp-for="WorkplaceId">
+                                <i class="bi bi-building me-1"></i>Workplace
+                            </label>
+                            <span asp-validation-for="WorkplaceId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="PreferenceRank" type="number" class="form-control" min="1" max="3" required />
+                            <label asp-for="PreferenceRank">
+                                <i class="bi bi-sort-numeric-down me-1"></i>Preference Rank
+                            </label>
+                            <span asp-validation-for="PreferenceRank" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Add Location
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferred Locations List -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-list-stars me-2"></i>Your Preferred Locations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UserPreferredLocations?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 100px">Rank</th>
+                                        <th>Location</th>
+                                        <th>Equipment</th>
+                                        <th style="width: 100px">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var location in Model.UserPreferredLocations.OrderBy(l => l.PreferenceRank))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <form asp-action="UpdateRank" method="post" class="d-inline">
+                                                    <input type="hidden" asp-for="UserId" value="@Model.UserId" />
+                                                    <input type="hidden" asp-for="WorkplaceId" value="@location.WorkplaceId" />
+                                                    <select asp-for="PreferenceRank" class="form-select form-select-sm" 
+                                                            onchange="this.form.submit()" style="width: 60px;">
+                                                        <option value="1" selected="@(location.PreferenceRank == 1)">1</option>
+                                                        <option value="2" selected="@(location.PreferenceRank == 2)">2</option>
+                                                        <option value="3" selected="@(location.PreferenceRank == 3)">3</option>
+                                                    </select>
+                                                </form>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-building me-2 text-primary"></i>
+                                                    <div>
+                                                        <div class="fw-bold">Floor @location.Workplace.Floor</div>
+                                                        <small class="text-muted">Zone @location.Workplace.Zone</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    @if (location.Workplace.HasMonitor) { 
+                                                        <span class="badge bg-info">
+                                                            <i class="bi bi-display me-1"></i>Monitor
+                                                        </span> 
+                                                    }
+                                                    @if (location.Workplace.HasDocking) { 
+                                                        <span class="badge bg-info">
+                                                            <i class="bi bi-hdd-network me-1"></i>Docking
+                                                        </span> 
+                                                    }
+                                                    @if (location.Workplace.HasWindow) { 
+                                                        <span class="badge bg-info">
+                                                            <i class="bi bi-window me-1"></i>Window
+                                                        </span> 
+                                                    }
+                                                    @if (location.Workplace.HasPrinter) { 
+                                                        <span class="badge bg-info">
+                                                            <i class="bi bi-printer me-1"></i>Printer
+                                                        </span> 
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <form asp-action="Remove" method="post" class="d-inline">
+                                                    <input type="hidden" asp-for="UserId" value="@Model.UserId" />
+                                                    <input type="hidden" asp-for="WorkplaceId" value="@location.WorkplaceId" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                            onclick="return confirm('Are you sure you want to remove this preferred location?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info shadow-sm">
+                            <i class="bi bi-info-circle me-2"></i>You haven't added any preferred locations yet.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Check if user can add more preferred locations
+        function checkAvailability() {
+            fetch('@Url.Action("CheckAvailability")?userId=@Model.UserId')
+                .then(response => response.json())
+                .then(data => {
+                    const addForm = document.querySelector('form[asp-action="Add"]');
+                    if (!data.canAddMore) {
+                        addForm.style.display = 'none';
+                        const cardBody = addForm.closest('.card-body');
+                        const message = document.createElement('div');
+                        message.className = 'alert alert-warning shadow-sm';
+                        message.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>You have reached the maximum limit of 3 preferred locations.';
+                        cardBody.insertBefore(message, addForm);
+                    }
+                });
+        }
+
+        // Check availability when page loads
+        document.addEventListener('DOMContentLoaded', checkAvailability);
+    </script>
+} 
